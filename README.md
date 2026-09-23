@@ -378,7 +378,93 @@ npm run test:concurrency
 
 ---
 
-## 14. Concurrency Handling Deep-Dive
+---
+
+## 14. Cloud Deployment Guide (Render + Vercel + MongoDB Atlas)
+
+The repository includes pre-configured deployment manifests:
+- `render.yaml` for the backend API on **Render**
+- `mobile/vercel.json` for the web application on **Vercel**
+
+---
+
+### Step 1: Push Code to Your GitHub Repository
+
+1. Create a new repository on [GitHub](https://github.com/new) (e.g. `feedants-competition-app`).
+2. Run the following commands in your local project root:
+   ```bash
+   git remote add origin https://github.com/<YOUR_GITHUB_USERNAME>/<YOUR_REPO_NAME>.git
+   git branch -M main
+   git push -u origin main
+   ```
+
+---
+
+### Step 2: Set Up Free Cloud Database (MongoDB Atlas)
+
+1. Sign up or log into [MongoDB Atlas](https://www.mongodb.com/cloud/atlas).
+2. Create a free **M0 Cluster**.
+3. Under **Network Access**, add IP `0.0.0.0/0` (allow access from anywhere) so Render can connect.
+4. Under **Database Access**, create a user (e.g. `feedants_admin`) with a secure password.
+5. Click **Connect** -> **Drivers** (Node.js) and copy the connection string:
+   `mongodb+srv://feedants_admin:<password>@cluster0.xxxx.mongodb.net/feedants?retryWrites=true&w=majority`
+
+---
+
+### Step 3: Deploy Backend on Render
+
+1. Go to [Render Dashboard](https://dashboard.render.com/) and click **New +** -> **Web Service**.
+2. Connect your GitHub repository.
+3. Configure the service settings:
+   - **Name**: `feedants-api` (or your choice)
+   - **Region**: Closest to your users (e.g., Singapore / Frankfurt / Oregon)
+   - **Root Directory**: `server`
+   - **Runtime**: `Node`
+   - **Build Command**: `npm install`
+   - **Start Command**: `npm start`
+   - **Plan**: `Free`
+4. Add the following **Environment Variables** in the Render dashboard:
+   | Key | Value | Notes |
+   | :--- | :--- | :--- |
+   | `NODE_ENV` | `production` | Production mode |
+   | `MONGODB_URI` | `mongodb+srv://...` | Your MongoDB Atlas connection string from Step 2 |
+   | `JWT_SECRET` | `your-secure-random-secret-key-2026` | Any strong secret string |
+   | `JWT_EXPIRES_IN` | `7d` | Token expiry |
+   | `CLIENT_URL` | `*` | Or your Vercel URL once deployed |
+5. Expand **Advanced**:
+   - **Health Check Path**: `/health`
+   - Click **Auto-Deploy**: `Yes`
+6. Click **Create Web Service**. Once deployed, copy your Render public backend URL:
+   `https://feedants-api.onrender.com`
+7. *(Optional)* To seed the production database with initial competition data, open the **Shell** tab on Render and run:
+   ```bash
+   npm run seed
+   ```
+
+---
+
+### Step 4: Deploy Frontend on Vercel
+
+1. Go to [Vercel Dashboard](https://vercel.com/dashboard) and click **Add New...** -> **Project**.
+2. Import your GitHub repository.
+3. Configure project settings:
+   - **Root Directory**: Select `mobile` (click Edit and select `mobile`)
+   - **Framework Preset**: `Other`
+   - **Build Command**: `npx expo export -p web`
+   - **Output Directory**: `dist`
+   - **Install Command**: `npm install --legacy-peer-deps`
+4. Add the **Environment Variable**:
+   | Key | Value |
+   | :--- | :--- |
+   | `EXPO_PUBLIC_API_URL` | `https://feedants-api.onrender.com/api/v1` *(replace with your Render backend URL)* |
+5. Click **Deploy**.
+6. Vercel will build and deploy your app. Within ~2 minutes, your live production web URL will be ready:
+   `https://<your-project>.vercel.app`
+
+---
+
+## 15. Concurrency Handling Deep-Dive
+
 
 ### The Problem
 When a competition has only **1 remaining spot** (`capacity: 10`, `registeredCount: 9`) and **20 users** click "Register" simultaneously, naive implementations that read the count and then insert a record will oversell the competition (e.g., `registeredCount` becomes `29`!).
@@ -413,7 +499,7 @@ When a competition has only **1 remaining spot** (`capacity: 10`, `registeredCou
 
 ---
 
-## 15. Assumptions
+## 16. Assumptions
 
 1. **Visual Reference vs API Contract**: The provided screenshot serves as the UI benchmark; the underlying REST API, data models, and schemas were designed independently to production standards.
 2. **Mocked Payment Flow**: Payment is cleanly mocked via an interactive simulated Razorpay dialog, as no real gateway credentials were provided.
@@ -422,7 +508,7 @@ When a competition has only **1 remaining spot** (`capacity: 10`, `registeredCou
 
 ---
 
-## 16. Trade-offs
+## 17. Trade-offs
 
 - **Modular Monolith vs Microservices**: Modular Monolith was chosen to avoid unnecessary distributed network complexity while maintaining strict domain modularity (Competitions, Registrations, Submissions).
 - **Embedded vs Referenced Criteria**: Judging criteria and rules are embedded directly inside the Competition document to minimize expensive joins and aggregations on reads.
@@ -430,9 +516,10 @@ When a competition has only **1 remaining spot** (`capacity: 10`, `registeredCou
 
 ---
 
-## 17. Production Improvements
+## 18. Production Improvements
 
 1. **Redis Caching**: Cache competition details and server time to handle >100,000 read requests per second.
 2. **Payment Gateway**: Integrate real Razorpay/Stripe webhooks with idempotent event handlers.
 3. **Cloud Object Storage**: AWS S3 / Cloudflare R2 direct pre-signed URL uploads for video submissions.
 4. **WebSocket/SSE**: Real-time push updates for live spots remaining during flash registration sales.
+
