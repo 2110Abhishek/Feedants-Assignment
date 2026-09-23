@@ -47,6 +47,13 @@ app.use('/api/v1/competitions', competitionRoutes);
 app.use('/api/v1/submissions', submissionRoutes);
 app.use('/api/v1/system', systemRoutes);
 
+// Root path fallbacks for frontend clients without /api/v1 prefix
+app.use('/auth', authRoutes);
+app.use('/competitions', competitionRoutes);
+app.use('/submissions', submissionRoutes);
+app.use('/system', systemRoutes);
+
+
 // Catch-all 404
 app.use('*', (req, res) => {
   res.status(404).json({

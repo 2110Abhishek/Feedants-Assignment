@@ -6,14 +6,20 @@ import { Platform } from 'react-native';
 // On Android emulator, localhost is 10.0.2.2; on web or physical LAN it is localhost or IP.
 // We provide smart detection with EXPO_PUBLIC_API_URL fallback.
 const getDefaultBaseUrl = () => {
-  if (process.env.EXPO_PUBLIC_API_URL) {
-    return process.env.EXPO_PUBLIC_API_URL;
+  let url = process.env.EXPO_PUBLIC_API_URL;
+  if (url) {
+    url = url.trim().replace(/\/+$/, '');
+    if (!url.endsWith('/api/v1')) {
+      url = `${url}/api/v1`;
+    }
+    return url;
   }
   if (Platform.OS === 'android') {
     return 'http://10.0.2.2:5000/api/v1';
   }
   return 'http://127.0.0.1:5000/api/v1';
 };
+
 
 export const API_BASE_URL = getDefaultBaseUrl();
 
