@@ -11,6 +11,7 @@ import {
   Text,
 } from 'react-native';
 import { useQueryClient } from '@tanstack/react-query';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Header } from '../components/Header';
 import { CompetitionSummary } from '../components/CompetitionSummary';
 import { JudgeCard } from '../components/JudgeCard';
@@ -60,37 +61,49 @@ export const CompetitionDetailsScreen = ({ route, navigation }) => {
   const t = translations[lang] || translations.en;
 
   const initApp = useCallback(async () => {
-    setDiscoveryLoading(true);
     setDiscoveryError(null);
     try {
-      // 1. Restore or seed default logged in user (Abhishek as in screenshot)
-      let storedUser = await authApi.getStoredUser();
-      if (!storedUser) {
-        try {
-          const authData = await authApi.login('user@example.com', 'password123');
-          storedUser = authData.user;
-        } catch {
-          // guest mode
-        }
+      // 1. Check local storage for cached competition ID first to eliminate discovery latency
+      const cachedId = await AsyncStorage.getItem('@feedants_active_comp_id');
+      if (cachedId && !activeCompId) {
+        setActiveCompId(cachedId);
+        setDiscoveryLoading(false);
       }
-      setCurrentUser(storedUser);
 
-      // 2. Discover competition ID
-      if (!activeCompId) {
-        const listRes = await competitionApi.listCompetitions();
-        if (listRes.competitions && listRes.competitions.length > 0) {
-          setActiveCompId(listRes.competitions[0].id);
-        } else {
-          setDiscoveryError(new Error('No competitions found in database. Run npm run seed.'));
-        }
+      // 2. Parallel fetch: Restore/seed user AND discover competition simultaneously
+      const [storedUserRes, listRes] = await Promise.allSettled([
+        (async () => {
+          let user = await authApi.getStoredUser();
+          if (!user) {
+            try {
+              const authData = await authApi.login('user@example.com', 'password123');
+              user = authData.user;
+            } catch {
+              // guest mode
+            }
+          }
+          return user;
+        })(),
+        !activeCompId && !cachedId ? competitionApi.listCompetitions() : Promise.resolve(null),
+      ]);
+
+      if (storedUserRes.status === 'fulfilled' && storedUserRes.value) {
+        setCurrentUser(storedUserRes.value);
+      }
+
+      if (listRes.status === 'fulfilled' && listRes.value?.competitions?.length > 0) {
+        const foundId = listRes.value.competitions[0].id;
+        setActiveCompId(foundId);
+        await AsyncStorage.setItem('@feedants_active_comp_id', foundId);
       }
     } catch (err) {
-      console.warn('Error fetching competition list:', err);
+      console.warn('Error in initApp:', err);
       setDiscoveryError(err);
     } finally {
       setDiscoveryLoading(false);
     }
   }, [activeCompId]);
+
 
   useEffect(() => {
     initApp();
