@@ -1,0 +1,32 @@
+export const colors = {
+  primary: '#005C53',        // Dark teal for CTA and key headers
+  primaryDark: '#043A34',
+  primaryLight: '#007A6E',
+  mint: '#EBF6F4',           // Light mint background for cards (countdown, referral)
+  mintLight: '#F3FAF9',
+  mintBorder: '#B2DFDB',
+  mintText: '#006D63',       // Teal text for countdown and numbers
+  background: '#F8FAFC',
+  cardBackground: '#FFFFFF',
+  textPrimary: '#1E293B',
+  textSecondary: '#64748B',
+  textMuted: '#94A3B8',
+  border: '#E2E8F0',
+  borderLight: '#F1F5F9',
+  tagBg: '#F1F5F9',
+  tagText: '#475569',
+  badgeGreenBg: '#E6F4EA',
+  badgeGreenText: '#137333',
+  badgeTealBg: '#E0F2F1',
+  badgeTealText: '#00695C',
+  warningBg: '#FEF3C7',
+  warningText: '#B45309',
+  dangerBg: '#FEE2E2',
+  dangerText: '#B91C1C',
+  disclaimerBg: '#E0F2FE',
+  disclaimerText: '#0369A1',
+  starGold: '#F59E0B',
+  white: '#FFFFFF',
+  black: '#000000',
+  razorpayBlue: '#0C2340',
+};
