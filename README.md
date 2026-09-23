@@ -435,7 +435,7 @@ The repository includes pre-configured deployment manifests:
    - **Health Check Path**: `/health`
    - Click **Auto-Deploy**: `Yes`
 6. Click **Create Web Service**. Once deployed, copy your Render public backend URL:
-   `https://feedants-api.onrender.com`
+   `https://feedants-assignment.onrender.com`
 7. *(Optional)* To seed the production database with initial competition data, open the **Shell** tab on Render and run:
    ```bash
    npm run seed
@@ -446,7 +446,7 @@ The repository includes pre-configured deployment manifests:
 ### Step 4: Deploy Frontend on Vercel
 
 1. Go to [Vercel Dashboard](https://vercel.com/dashboard) and click **Add New...** -> **Project**.
-2. Import your GitHub repository.
+2. Import your GitHub repository: `https://github.com/2110Abhishek/Feedants-Assignment`
 3. Configure project settings:
    - **Root Directory**: Select `mobile` (click Edit and select `mobile`)
    - **Framework Preset**: `Other`
@@ -456,10 +456,11 @@ The repository includes pre-configured deployment manifests:
 4. Add the **Environment Variable**:
    | Key | Value |
    | :--- | :--- |
-   | `EXPO_PUBLIC_API_URL` | `https://feedants-api.onrender.com/api/v1` *(replace with your Render backend URL)* |
+   | `EXPO_PUBLIC_API_URL` | `https://feedants-assignment.onrender.com/api/v1` |
 5. Click **Deploy**.
 6. Vercel will build and deploy your app. Within ~2 minutes, your live production web URL will be ready:
    `https://<your-project>.vercel.app`
+
 
 ---
 
